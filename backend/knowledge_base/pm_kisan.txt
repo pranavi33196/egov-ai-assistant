@@ -1,0 +1,14 @@
+SERVICE: PM-KISAN (Pradhan Mantri Kisan Samman Nidhi)
+DESCRIPTION: Central Sector scheme providing income support of Rs. 6,000 per year to all landholding farmer families across India in three equal installments of Rs. 2,000 every four months directly into their Aadhaar-seeded bank accounts via DBT.
+GENERAL ELIGIBILITY: All landholding farmer families having cultivable land in their names. (Excludes institutional landholders, government employees, income tax payees, and constitutional post holders).
+REQUIRED DOCUMENTS: Aadhaar Card, Land ownership papers (Khata / Khasra / RoR record of rights), Aadhaar-linked Bank Account Passbook, Active Mobile Number.
+APPLICATION PROCESS:
+1. Visit the PM-KISAN portal (pmkisan.gov.in) and select 'New Farmer Registration'.
+2. Select Rural/Urban Farmer, enter Aadhaar number, state, and mobile number for OTP verification.
+3. Enter land registration details, survey number, dag number, and bank account info.
+4. Complete mandatory OTP-based e-KYC on the portal or biometric e-KYC at CSC centers.
+5. State/District nodal officer verifies land records. Upon approval, installments are credited directly via DBT.
+OFFICIAL PORTAL: https://pmkisan.gov.in
+HELPLINE: Toll-Free 155261 / 011-24300606 | PM-KISAN Helpdesk: 011-23381092
+FEES: Free of cost registration.
+SOURCE / SOURCE TYPE: Ministry of Agriculture & Farmers Welfare / Government of India

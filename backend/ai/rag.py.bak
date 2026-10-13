@@ -1,0 +1,83 @@
+import os
+import glob
+from sentence_transformers import SentenceTransformer
+import chromadb
+
+class RAGEngine:
+    def __init__(self, data_dir="knowledge_base", db_dir="vector_db"):
+        self.data_dir = data_dir
+        self.db_dir = db_dir
+        
+        print("Initializing Sentence Transformer...")
+        self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+        
+        print(f"Initializing ChromaDB at {db_dir}...")
+        self.chroma_client = chromadb.PersistentClient(path=db_dir)
+        self.collection = self.chroma_client.get_or_create_collection(name="egov_knowledge")
+        
+        self.load_documents()
+
+    def load_documents(self):
+        files = glob.glob(os.path.join(self.data_dir, "*.txt"))
+        if not files:
+            print("No documents found in knowledge base.")
+            return
+
+        documents = []
+        metadatas = []
+        ids = []
+
+        for file_path in files:
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                
+                # Extract service title and metadata
+                service_title = "Unknown Service"
+                source_type = "Government Knowledge Base"
+                portal = None
+                
+                for line in content.split("\n"):
+                    if line.startswith("SERVICE:"):
+                        service_title = line.replace("SERVICE:", "").strip()
+                    elif line.startswith("OFFICIAL PORTAL:"):
+                        portal = line.replace("OFFICIAL PORTAL:", "").strip()
+                    elif line.startswith("SOURCE / SOURCE TYPE:"):
+                        source_type = line.replace("SOURCE / SOURCE TYPE:", "").strip()
+                
+                doc_id = f"doc_{os.path.splitext(os.path.basename(file_path))[0]}"
+                
+                documents.append(content)
+                metadatas.append({
+                    "title": service_title,
+                    "source_type": source_type,
+                    "portal": portal or "",
+                    "file": os.path.basename(file_path)
+                })
+                ids.append(doc_id)
+
+        print(f"Syncing and indexing {len(documents)} knowledge base documents into ChromaDB...")
+        embeddings = self.embedding_model.encode(documents).tolist()
+        
+        # Use upsert so new and modified documents are always cleanly synchronized
+        self.collection.upsert(
+            documents=documents,
+            embeddings=embeddings,
+            metadatas=metadatas,
+            ids=ids
+        )
+        print(f"Successfully synced {len(documents)} documents in ChromaDB.")
+
+    def search(self, query: str, top_k: int = 3):
+        query_embedding = self.embedding_model.encode([query]).tolist()
+        results = self.collection.query(
+            query_embeddings=query_embedding,
+            n_results=top_k
+        )
+        
+        if not results['documents'] or not results['documents'][0]:
+            return [], []
+            
+        return results['documents'][0], results['metadatas'][0]
+
+# Singleton instance
+rag_engine = RAGEngine()

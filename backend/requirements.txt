@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv
+python-multipart
+requests
+sqlalchemy
+bcrypt
+python-jose[cryptography]
+chromadb
+sentence-transformers
+deep-translator
+gTTS
+# PyJWT is only needed if you keep the old auth/sso.py (api/auth.py is unused):
+# PyJWT

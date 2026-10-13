@@ -1,0 +1,7 @@
+SERVICE: Birth Certificate
+DESCRIPTION: Official record of a person's birth.
+GENERAL ELIGIBILITY: Any person born in the jurisdiction.
+REQUIRED DOCUMENTS: Hospital discharge slip, parent's identity proof.
+APPLICATION PROCESS: Register birth within 21 days at the local municipal or panchayat office.
+IMPORTANT NOTES: Requirements and procedures may vary by state/UT. Please verify the latest information through the relevant official government portal.
+SOURCE / SOURCE TYPE: Prototype Reference / Government Knowledge Base

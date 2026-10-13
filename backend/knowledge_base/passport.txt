@@ -1,0 +1,7 @@
+SERVICE: Passport
+DESCRIPTION: An official document issued by a government, certifying the holder's identity and citizenship.
+GENERAL ELIGIBILITY: Indian citizens.
+REQUIRED DOCUMENTS: Address proof, Date of Birth proof, non-ECR proof if applicable.
+APPLICATION PROCESS: Register on Passport Seva portal, pay fees, book appointment, visit PSK.
+IMPORTANT NOTES: Requirements and procedures may vary by state/UT. Please verify the latest information through the relevant official government portal.
+SOURCE / SOURCE TYPE: Prototype Reference / Government Knowledge Base

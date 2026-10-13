@@ -1,0 +1,160 @@
+from fastapi import APIRouter, HTTPException, Depends, Header
+from pydantic import BaseModel
+from typing import List, Optional
+import json
+
+from sqlalchemy.orm import Session
+from database.base import get_db
+from database.models import User, Conversation, Message
+from auth.security import decode_access_token
+from bhashini.translate import translate_text
+from ai.intent import detect_intent
+from ai.rag import rag_engine
+from ai.llm import generate_answer_with_meta   # CHANGED: was generate_answer
+
+router = APIRouter()
+
+class QueryRequest(BaseModel):
+    question: str
+    language: str = "en"
+    conversation_id: Optional[int] = None
+
+class SourceInfo(BaseModel):
+    title: str
+    source_type: str
+    url: Optional[str] = None
+    file: Optional[str] = None
+
+class ProcessingInfo(BaseModel):
+    translation: str
+    retrieval: str
+    llm: str
+    bhashini: str
+
+class QueryResponse(BaseModel):
+    answer: str
+    language: str
+    intent: str
+    confidence: float
+    conversation_id: Optional[int] = None
+    sources: List[SourceInfo]
+    processing: ProcessingInfo
+
+def get_optional_user(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)) -> Optional[User]:
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    token = authorization.split(" ", 1)[1]
+    payload = decode_access_token(token)
+    if not payload or not payload.get("sub"):
+        return None
+    try:
+        user_id = int(payload["sub"])
+        return db.query(User).filter(User.id == user_id, User.is_active == True).first()
+    except Exception:
+        return None
+
+@router.post("/query", response_model=QueryResponse)
+def handle_query(request: QueryRequest, db: Session = Depends(get_db), current_user: Optional[User] = Depends(get_optional_user)):
+    user_query = request.question.strip()
+    if not user_query:
+        raise HTTPException(status_code=400, detail="Query cannot be empty.")
+
+    target_lang = (request.language or "en").lower()
+
+    # 1. Translate Query to English (Canonical for RAG embedding)
+    translation_in = translate_text(user_query, target_lang, "en")
+    canonical_query = translation_in.get("translated_text", user_query)
+    provider_in = translation_in.get("provider", "direct")
+
+    # 2. Intent Detection
+    intent_res = detect_intent(canonical_query)
+    intent = intent_res.get("intent", "general_query")
+    confidence = intent_res.get("confidence", 0.85)
+
+    # 3. Retrieve Previous Chat History for Context (if conversation_id supplied)
+    conv_id = request.conversation_id
+    conv = None
+    history_context = []
+
+    if current_user:
+        if conv_id:
+            conv = db.query(Conversation).filter(Conversation.id == conv_id, Conversation.user_id == current_user.id).first()
+        if not conv:
+            first_words = " ".join(user_query.split()[:5])
+            conv = Conversation(
+                user_id=current_user.id,
+                title=first_words if first_words else "New Query",
+                language=target_lang
+            )
+            db.add(conv)
+            db.commit()
+            db.refresh(conv)
+            conv_id = conv.id
+
+        prev_msgs = db.query(Message).filter(Message.conversation_id == conv.id).order_by(Message.created_at.desc()).limit(4).all()
+        for m in reversed(prev_msgs):
+            history_context.append(f"{m.role.upper()}: {m.content}")
+
+    # 4. RAG Retrieval from ChromaDB
+    context_chunks, metadatas = rag_engine.search(canonical_query, top_k=3)
+
+    # 5. LLM Generation (Ollama if available, otherwise rule-based synthesis)
+    augmented_query = canonical_query
+    if history_context:
+        augmented_query = f"Previous context:\n" + "\n".join(history_context) + f"\n\nCurrent Question: {canonical_query}"
+
+    # CHANGED: one call returns the answer AND which engine really produced it
+    english_answer, used_llm = generate_answer_with_meta(augmented_query, context_chunks)
+
+    # 6. Translate Answer Back into User's Selected Language
+    translation_out = translate_text(english_answer, "en", target_lang)
+    final_answer = translation_out.get("translated_text", english_answer)
+    provider_out = translation_out.get("provider", "direct")
+
+    # 7. Format Sources & Citations
+    sources = []
+    for meta in metadatas:
+        sources.append(SourceInfo(
+            title=meta.get("title", "Official Government Portal"),
+            source_type=meta.get("source_type", "Government Knowledge Base"),
+            file=meta.get("file", ""),
+            url=meta.get("portal", "") or None
+        ))
+
+    # 8. Save to DB if Conversation Exists
+    if conv:
+        try:
+            user_msg = Message(
+                conversation_id=conv.id,
+                role="user",
+                content=user_query,
+                language=target_lang
+            )
+            asst_msg = Message(
+                conversation_id=conv.id,
+                role="assistant",
+                content=final_answer,
+                language=target_lang,
+                source_references=json.dumps([s.model_dump() for s in sources])
+            )
+            db.add_all([user_msg, asst_msg])
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            print(f"Error saving chat history: {e}")
+
+    return QueryResponse(
+        answer=final_answer,
+        language=target_lang,
+        intent=intent,
+        confidence=confidence,
+        conversation_id=conv_id,
+        sources=sources,
+        processing=ProcessingInfo(
+            translation=f"{provider_in} -> {provider_out}",
+            retrieval="chromadb_vector_search",
+            llm=used_llm,
+            # CHANGED: 'active' only when the OFFICIAL Bhashini API really answered
+            bhashini="active" if ("bhashini_official" in provider_in or "bhashini_official" in provider_out) else "neural_nmt"
+        )
+    )

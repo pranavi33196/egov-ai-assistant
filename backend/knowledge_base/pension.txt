@@ -1,0 +1,7 @@
+SERVICE: Pension
+DESCRIPTION: Financial assistance provided to senior citizens, widows, and disabled persons.
+GENERAL ELIGIBILITY: Varies based on pension type (e.g., above 60 for Old Age Pension).
+REQUIRED DOCUMENTS: Age proof, Income Certificate, Aadhaar, Bank passbook.
+APPLICATION PROCESS: Apply through state social welfare portal or local panchayat/municipal office.
+IMPORTANT NOTES: Requirements and procedures may vary by state/UT. Please verify the latest information through the relevant official government portal.
+SOURCE / SOURCE TYPE: Prototype Reference / Government Knowledge Base

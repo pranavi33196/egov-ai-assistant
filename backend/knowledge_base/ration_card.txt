@@ -1,0 +1,7 @@
+SERVICE: Ration Card
+DESCRIPTION: A document for the purchase of essential commodities from fair price shops.
+GENERAL ELIGIBILITY: Permanent residents of the state.
+REQUIRED DOCUMENTS: Address proof, Identity Proof, Income Certificate, Photographs.
+APPLICATION PROCESS: Submit application to local rationing office with documents.
+IMPORTANT NOTES: Requirements and procedures may vary by state/UT. Please verify the latest information through the relevant official government portal.
+SOURCE / SOURCE TYPE: Prototype Reference / Government Knowledge Base

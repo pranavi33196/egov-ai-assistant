@@ -1,0 +1,77 @@
+import io
+import re
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import Response
+
+router = APIRouter()
+
+
+def clean_text_for_speech(text: str) -> str:
+    """Strip markdown symbols and URLs so TTS reads cleanly."""
+    cleaned = re.sub(r'https?://\S+', '', text)
+    cleaned = re.sub(r'[*#_•\-\[\]\(\)]', ' ', cleaned)
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+    return cleaned[:1000]  # Limit for fast response
+
+
+def text_to_speech(text: str, language: str = "en") -> dict:
+    """
+    Legacy function used by api/language.py.
+    Returns a dict with 'audio_url' hint and 'supported' status.
+    """
+    lang_code = "en"
+    if language in ["te", "telugu"]:
+        lang_code = "te"
+    elif language in ["hi", "hindi"]:
+        lang_code = "hi"
+    elif language in ["ta", "tamil"]:
+        lang_code = "ta"
+    elif language in ["kn", "kannada"]:
+        lang_code = "kn"
+    return {
+        "status": "use_streaming_endpoint",
+        "audio_url": f"/api/tts/stream?text={text}&lang={lang_code}",
+        "language": lang_code
+    }
+
+
+@router.get("/tts/stream")
+def stream_text_to_speech(
+    text: str = Query(..., min_length=1),
+    lang: str = Query("en")
+):
+    """
+    High quality server-side audio stream for Telugu, Hindi, English.
+    Uses gTTS (Google Neural TTS). Streams MP3 for HTML5 audio playback.
+    """
+    cleaned = clean_text_for_speech(text)
+    if not cleaned:
+        raise HTTPException(status_code=400, detail="Empty speech text")
+
+    lang_code = "en"
+    if lang in ["te", "telugu"]:
+        lang_code = "te"
+    elif lang in ["hi", "hindi"]:
+        lang_code = "hi"
+    elif lang in ["ta", "tamil"]:
+        lang_code = "ta"
+    elif lang in ["kn", "kannada"]:
+        lang_code = "kn"
+
+    try:
+        from gtts import gTTS
+        mp3_fp = io.BytesIO()
+        tts = gTTS(text=cleaned, lang=lang_code, slow=False)
+        tts.write_to_fp(mp3_fp)
+        mp3_fp.seek(0)
+        return Response(
+            content=mp3_fp.read(),
+            media_type="audio/mpeg",
+            headers={
+                "Cache-Control": "no-cache",
+                "Content-Disposition": "inline; filename=tts.mp3"
+            }
+        )
+    except Exception as e:
+        print(f"[TTS] gTTS generation error: {e}")
+        raise HTTPException(status_code=500, detail=f"TTS synthesis error: {str(e)}")

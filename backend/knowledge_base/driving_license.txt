@@ -1,0 +1,7 @@
+SERVICE: Driving License
+DESCRIPTION: An official document permitting an individual to operate motorized vehicles.
+GENERAL ELIGIBILITY: Above 18 years of age (16 for gearless 2-wheelers).
+REQUIRED DOCUMENTS: Age proof, Address proof, Learner's License.
+APPLICATION PROCESS: Obtain Learner's License, wait 30 days, apply for permanent license, pass driving test.
+IMPORTANT NOTES: Requirements and procedures may vary by state/UT. Please verify the latest information through the relevant official government portal.
+SOURCE / SOURCE TYPE: Prototype Reference / Government Knowledge Base

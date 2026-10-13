@@ -1,0 +1,7 @@
+SERVICE: Income Certificate
+DESCRIPTION: Document certifying the annual income of a person or family.
+GENERAL ELIGIBILITY: Any resident requiring proof of income.
+REQUIRED DOCUMENTS: Salary slips, IT returns, Ration Card, Aadhaar.
+APPLICATION PROCESS: Apply online via state e-district portal or at local Tahsildar office.
+IMPORTANT NOTES: Requirements and procedures may vary by state/UT. Please verify the latest information through the relevant official government portal.
+SOURCE / SOURCE TYPE: Prototype Reference / Government Knowledge Base

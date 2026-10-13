@@ -1,0 +1,323 @@
+{
+  "_meta": {
+    "description": "District gazetteer for Andhra Pradesh and Telangana. Aliases cover English, Telugu-script transliterations, and common spelling variants.",
+    "ap_districts": 26,
+    "ts_districts": 33,
+    "last_updated": "2024-01",
+    "sources": [
+      "AP Reorganization Act 2022 (26 districts)",
+      "Telangana State Portal (33 districts)"
+    ]
+  },
+  "states": {
+    "andhra_pradesh": {
+      "label": "Andhra Pradesh",
+      "aliases": ["andhra", "ap", "ఆంధ్రప్రదేశ్", "andhra pradesh"]
+    },
+    "telangana": {
+      "label": "Telangana",
+      "aliases": ["telangana", "ts", "తెలంగాణ", "telangaana"]
+    }
+  },
+  "districts": {
+    "andhra_pradesh": [
+      {
+        "id": "anantapur",
+        "name": "Anantapur",
+        "aliases": ["anantapur", "anantapuram", "anantpur", "అనంతపురం", "ananthapuram"]
+      },
+      {
+        "id": "bapatla",
+        "name": "Bapatla",
+        "aliases": ["bapatla", "బాపట్ల"]
+      },
+      {
+        "id": "chittoor",
+        "name": "Chittoor",
+        "aliases": ["chittoor", "chittor", "చిత్తూరు", "chitturu"]
+      },
+      {
+        "id": "eluru",
+        "name": "Eluru",
+        "aliases": ["eluru", "ఏలూరు", "elore", "ellore"]
+      },
+      {
+        "id": "guntur",
+        "name": "Guntur",
+        "aliases": ["guntur", "గుంటూరు", "gunturu"]
+      },
+      {
+        "id": "kadapa",
+        "name": "YSR Kadapa",
+        "aliases": ["kadapa", "కడప", "ysr kadapa", "cuddapah", "cuddapah district", "kadapa district"]
+      },
+      {
+        "id": "kakinada",
+        "name": "Kakinada",
+        "aliases": ["kakinada", "కాకినాడ", "cocanada"]
+      },
+      {
+        "id": "konaseema",
+        "name": "Dr B R Ambedkar Konaseema",
+        "aliases": ["konaseema", "కోనసీమ", "east godavari", "east godawari", "ambedkar konaseema"]
+      },
+      {
+        "id": "krishna",
+        "name": "Krishna",
+        "aliases": ["krishna", "కృష్ణా", "krishna district"]
+      },
+      {
+        "id": "kurnool",
+        "name": "Kurnool",
+        "aliases": ["kurnool", "కర్నూలు", "kurnool district", "karnool"]
+      },
+      {
+        "id": "nandyal",
+        "name": "Nandyal",
+        "aliases": ["nandyal", "నంద్యాల", "nandyala"]
+      },
+      {
+        "id": "ntr",
+        "name": "NTR (Krishna)",
+        "aliases": ["ntr", "ntr district", "ntr krishna", "vijayawada rural"]
+      },
+      {
+        "id": "palnadu",
+        "name": "Palnadu",
+        "aliases": ["palnadu", "పల్నాడు", "narasaraopet"]
+      },
+      {
+        "id": "parvathipuram_manyam",
+        "name": "Parvathipuram Manyam",
+        "aliases": ["parvathipuram", "పార్వతీపురం", "parvathipuram manyam", "manyam"]
+      },
+      {
+        "id": "prakasam",
+        "name": "Prakasam",
+        "aliases": ["prakasam", "ప్రకాశం", "ongole", "prakasham"]
+      },
+      {
+        "id": "spsr_nellore",
+        "name": "SPSR Nellore",
+        "aliases": ["nellore", "నెల్లూరు", "spsr nellore", "psr nellore"]
+      },
+      {
+        "id": "sri_balaji",
+        "name": "Sri Balaji",
+        "aliases": ["sri balaji", "tirupati district", "tirupati", "తిరుపతి", "tirupathi"]
+      },
+      {
+        "id": "sri_sathya_sai",
+        "name": "Sri Sathya Sai",
+        "aliases": ["sri sathya sai", "puttaparthi", "పుట్టపర్తి", "sathya sai"]
+      },
+      {
+        "id": "srikakulam",
+        "name": "Srikakulam",
+        "aliases": ["srikakulam", "శ్రీకాకుళం", "chicacole", "chicacol"]
+      },
+      {
+        "id": "tirupati",
+        "name": "Tirupati (Urban)",
+        "aliases": ["tirupati urban", "tirupati city", "tirupati mcc"]
+      },
+      {
+        "id": "visakhapatnam",
+        "name": "Visakhapatnam",
+        "aliases": ["visakhapatnam", "వైశాఖపట్నం", "vizag", "visakhaptnam", "vishakapatnam", "visakha"]
+      },
+      {
+        "id": "vizianagaram",
+        "name": "Vizianagaram",
+        "aliases": ["vizianagaram", "విజయనగరం", "vizianagram", "vizinagaram"]
+      },
+      {
+        "id": "west_godavari",
+        "name": "West Godavari",
+        "aliases": ["west godavari", "పశ్చిమ గోదావరి", "eluru district", "bhimavaram"]
+      },
+      {
+        "id": "alluri_sitharama_raju",
+        "name": "Alluri Sitharama Raju",
+        "aliases": ["alluri", "alluri sitharama raju", "rampachodavaram", "paderu"]
+      },
+      {
+        "id": "anakapalli",
+        "name": "Anakapalli",
+        "aliases": ["anakapalli", "అనకాపల్లి"]
+      },
+      {
+        "id": "aganampudi",
+        "name": "Greater Visakhapatnam",
+        "aliases": ["gvmc", "greater vizag"]
+      }
+    ],
+    "telangana": [
+      {
+        "id": "adilabad",
+        "name": "Adilabad",
+        "aliases": ["adilabad", "ఆదిలాబాద్"]
+      },
+      {
+        "id": "bhadradri_kothagudem",
+        "name": "Bhadradri Kothagudem",
+        "aliases": ["bhadradri", "kothagudem", "భద్రాద్రి కొత్తగూడెం", "bhadrachalam"]
+      },
+      {
+        "id": "hanumakonda",
+        "name": "Hanumakonda",
+        "aliases": ["hanumakonda", "హనుమకొండ", "warangal urban", "warangal", "warngal"]
+      },
+      {
+        "id": "hyderabad",
+        "name": "Hyderabad",
+        "aliases": ["hyderabad", "హైదరాబాద్", "hyd", "secunderabad", "cybercity", "hitech city"]
+      },
+      {
+        "id": "jagityal",
+        "name": "Jagityal",
+        "aliases": ["jagityal", "జగిత్యాల"]
+      },
+      {
+        "id": "jangaon",
+        "name": "Jangaon",
+        "aliases": ["jangaon", "జనగాం"]
+      },
+      {
+        "id": "jayashankar_bhupalpally",
+        "name": "Jayashankar Bhupalpally",
+        "aliases": ["jayashankar", "bhupalpally", "జయశంకర్ భూపాలపల్లి"]
+      },
+      {
+        "id": "jogulamba_gadwal",
+        "name": "Jogulamba Gadwal",
+        "aliases": ["gadwal", "జోగులాంబ గద్వాల", "jogulamba", "jogulamba gadwal"]
+      },
+      {
+        "id": "kamareddy",
+        "name": "Kamareddy",
+        "aliases": ["kamareddy", "కామారెడ్డి"]
+      },
+      {
+        "id": "karimnagar",
+        "name": "Karimnagar",
+        "aliases": ["karimnagar", "కరీంనగర్"]
+      },
+      {
+        "id": "khammam",
+        "name": "Khammam",
+        "aliases": ["khammam", "ఖమ్మం", "khamam"]
+      },
+      {
+        "id": "komaram_bheem",
+        "name": "Komaram Bheem Asifabad",
+        "aliases": ["komaram bheem", "asifabad", "కొమరం భీమ్"]
+      },
+      {
+        "id": "mahabubabad",
+        "name": "Mahabubabad",
+        "aliases": ["mahabubabad", "మహబూబాబాద్"]
+      },
+      {
+        "id": "mahbubnagar",
+        "name": "Mahabubnagar",
+        "aliases": ["mahbubnagar", "mahabubnagar", "మహబూబ్‌నగర్", "mbn"]
+      },
+      {
+        "id": "mancherial",
+        "name": "Mancherial",
+        "aliases": ["mancherial", "మంచిర్యాల"]
+      },
+      {
+        "id": "medak",
+        "name": "Medak",
+        "aliases": ["medak", "మేడక్"]
+      },
+      {
+        "id": "medchal_malkajgiri",
+        "name": "Medchal-Malkajgiri",
+        "aliases": ["medchal", "malkajgiri", "మేడ్చల్ మల్కాజ్‌గిరి", "medchal malkajgiri"]
+      },
+      {
+        "id": "mulugu",
+        "name": "Mulugu",
+        "aliases": ["mulugu", "ములుగు"]
+      },
+      {
+        "id": "nagarkurnool",
+        "name": "Nagarkurnool",
+        "aliases": ["nagarkurnool", "నాగర్‌కర్నూల్", "nagar kurnool"]
+      },
+      {
+        "id": "nalgonda",
+        "name": "Nalgonda",
+        "aliases": ["nalgonda", "నల్గొండ"]
+      },
+      {
+        "id": "narayanpet",
+        "name": "Narayanpet",
+        "aliases": ["narayanpet", "నారాయణపేట"]
+      },
+      {
+        "id": "nirmal",
+        "name": "Nirmal",
+        "aliases": ["nirmal", "నిర్మల్"]
+      },
+      {
+        "id": "nizamabad",
+        "name": "Nizamabad",
+        "aliases": ["nizamabad", "నిజామాబాద్"]
+      },
+      {
+        "id": "peddapalli",
+        "name": "Peddapalli",
+        "aliases": ["peddapalli", "పెద్దపల్లి"]
+      },
+      {
+        "id": "rajanna_sircilla",
+        "name": "Rajanna Sircilla",
+        "aliases": ["rajanna sircilla", "sircilla", "రాజన్న సిరిసిల్ల"]
+      },
+      {
+        "id": "ranga_reddy",
+        "name": "Ranga Reddy",
+        "aliases": ["ranga reddy", "rangareddy", "రంగారెడ్డి", "lbr", "shamshabad"]
+      },
+      {
+        "id": "sangareddy",
+        "name": "Sangareddy",
+        "aliases": ["sangareddy", "సంగారెడ్డి", "zaheerabad"]
+      },
+      {
+        "id": "siddipet",
+        "name": "Siddipet",
+        "aliases": ["siddipet", "సిద్దిపేట"]
+      },
+      {
+        "id": "suryapet",
+        "name": "Suryapet",
+        "aliases": ["suryapet", "సూర్యాపేట"]
+      },
+      {
+        "id": "vikarabad",
+        "name": "Vikarabad",
+        "aliases": ["vikarabad", "వికారాబాద్"]
+      },
+      {
+        "id": "wanaparthy",
+        "name": "Wanaparthy",
+        "aliases": ["wanaparthy", "వనపర్తి"]
+      },
+      {
+        "id": "warangal",
+        "name": "Warangal (Rural)",
+        "aliases": ["warangal rural", "వరంగల్ రూరల్", "hanamkonda rural"]
+      },
+      {
+        "id": "yadadri_bhuvanagiri",
+        "name": "Yadadri Bhuvanagiri",
+        "aliases": ["yadadri", "bhuvanagiri", "యాదాద్రి భువనగిరి", "bhongir"]
+      }
+    ]
+  }
+}

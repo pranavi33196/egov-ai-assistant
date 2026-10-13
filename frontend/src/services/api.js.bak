@@ -1,0 +1,124 @@
+import axios from 'axios';
+
+const API_URL = 'http://localhost:8000/api';
+
+const api = axios.create({
+  baseURL: API_URL,
+});
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export const auth = {
+  // Registration with OTP
+  register: async (payload) => {
+    const res = await api.post('/auth/register', payload);
+    return res.data;
+  },
+
+  // OTP Verification
+  verifyOTP: async (payload) => {
+    const res = await api.post('/auth/verify-otp', payload);
+    return res.data;
+  },
+
+  // Resend OTP
+  resendOTP: async (payload) => {
+    const res = await api.post('/auth/resend-otp', payload);
+    return res.data;
+  },
+
+  // Step 1 Login
+  login: async (email, password, captcha_token = null) => {
+    const res = await api.post('/auth/login', { email, password, captcha_token });
+    return res.data;
+  },
+
+  // Step 2 Login (2FA verification)
+  verify2FA: async (email, otp) => {
+    const res = await api.post('/auth/login/verify-2fa', { email, otp });
+    return res.data;
+  },
+
+  // Forgot password
+  forgotPassword: async (email, captcha_token = null) => {
+    const res = await api.post('/auth/forgot-password', { email, captcha_token });
+    return res.data;
+  },
+
+  // Reset password
+  resetPassword: async (email, otp, new_password) => {
+    const res = await api.post('/auth/reset-password', { email, otp, new_password });
+    return res.data;
+  },
+
+  // Instant Demo Citizen Login
+  demoLogin: async () => {
+    const res = await api.post('/auth/demo-login');
+    return res.data;
+  },
+
+  // Get current authenticated user profile
+  getMe: async () => {
+    const res = await api.get('/auth/me');
+    return res.data;
+  },
+
+  // Update user profile
+  updateProfile: async (payload) => {
+    const res = await api.put('/auth/profile', payload);
+    return res.data;
+  }
+};
+
+export const conversations = {
+  list: async () => {
+    const res = await api.get('/conversations');
+    return res.data;
+  },
+
+  create: async (title = 'New Conversation', language = 'en') => {
+    const res = await api.post('/conversations', { title, language });
+    return res.data;
+  },
+
+  getMessages: async (conversationId) => {
+    const res = await api.get(`/conversations/${conversationId}/messages`);
+    return res.data;
+  },
+
+  rename: async (conversationId, title) => {
+    const res = await api.put(`/conversations/${conversationId}/rename`, { title });
+    return res.data;
+  },
+
+  delete: async (conversationId) => {
+    const res = await api.delete(`/conversations/${conversationId}`);
+    return res.data;
+  }
+};
+
+export const query = {
+  ask: async (question, language = 'en', conversation_id = null) => {
+    const res = await api.post('/query', { question, language, conversation_id });
+    return res.data;
+  }
+};
+
+export const system = {
+  health: async () => {
+    const res = await api.get('/health');
+    return res.data;
+  },
+  status: async () => {
+    const res = await api.get('/system/status');
+    return res.data;
+  }
+};
+
+export default api;

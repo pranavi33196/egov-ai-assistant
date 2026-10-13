@@ -1,0 +1,7 @@
+SERVICE: Scholarship
+DESCRIPTION: Financial aid awarded to students for further education.
+GENERAL ELIGIBILITY: Students enrolled in recognized institutions, meeting income criteria.
+REQUIRED DOCUMENTS: Marksheets, Income Certificate, Caste Certificate (if applicable), Bank details.
+APPLICATION PROCESS: Apply via National Scholarship Portal or State specific portal.
+IMPORTANT NOTES: Requirements and procedures may vary by state/UT. Please verify the latest information through the relevant official government portal.
+SOURCE / SOURCE TYPE: Prototype Reference / Government Knowledge Base

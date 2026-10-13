@@ -1,0 +1,15 @@
+SERVICE: Employees' Provident Fund (EPFO PF Online Withdrawal)
+DESCRIPTION: EPFO manages provident fund savings, pension (EPS), and insurance (EDLI) for salaried employees in India. Members can claim full or partial PF withdrawal online for illness, marriage, housing, education, or post-employment.
+GENERAL ELIGIBILITY: Salaried employees having an active Universal Account Number (UAN) with Aadhaar, PAN, and Bank KYC linked and verified by the employer.
+REQUIRED DOCUMENTS: Active UAN, Aadhaar linked to mobile number for OTP, Bank passbook or cancelled cheque with name printed, PAN card (for claims before 5 years service to prevent higher TDS).
+APPLICATION PROCESS:
+1. Log in to the Unified Member Portal (unifiedportal-mem.epfindia.gov.in) using UAN and password.
+2. Verify that KYC (Aadhaar, Bank Account, PAN) status shows 'Approved' and phone is seeded.
+3. Navigate to 'Online Services' -> 'Claim (Form-31, 19, 10C & 10D)'.
+4. Verify bank account number, select Claim Type (Advance Form 31, Final Settlement Form 19, or Pension Form 10C).
+5. Upload scanned copy of cheque/passbook, authenticate using Aadhaar OTP.
+6. Track claim status under 'Track Claim Status'. Funds are credited to bank account within 3 to 7 working days.
+OFFICIAL PORTAL: https://unifiedportal-mem.epfindia.gov.in / https://www.epfindia.gov.in
+HELPLINE: Toll-Free 14470 / 1800-118-005 | UMANG App support available
+FEES: 100% Free online service.
+SOURCE / SOURCE TYPE: Employees' Provident Fund Organisation (EPFO) / Ministry of Labour & Employment

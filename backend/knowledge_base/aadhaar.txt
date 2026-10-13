@@ -1,0 +1,14 @@
+SERVICE: Aadhaar Unique Identification (UIDAI)
+DESCRIPTION: Aadhaar is a 12-digit unique identity number issued by UIDAI to all residents of India based on biometric and demographic data. It serves as universal proof of identity and address across India.
+GENERAL ELIGIBILITY: Any individual residing in India for at least 182 days in the preceding 12 months, including newborns and minors.
+REQUIRED DOCUMENTS: Proof of Identity (POI - Passport, PAN, Voter ID, Ration Card), Proof of Address (POA - Electricity bill, Water bill, Bank passbook), Date of Birth Proof (Birth certificate, SSLC book).
+APPLICATION PROCESS:
+1. Locate your nearest Aadhaar Seva Kendra or Authorized Enrollment Center via uidai.gov.in.
+2. Book an online appointment or visit directly with original verification documents.
+3. Complete biometric capture (10 fingerprints, iris scan, facial photograph) and demographic data entry.
+4. Collect the 28-digit Enrollment Slip / Acknowledgement ID (EID) with date-time stamp.
+5. Download e-Aadhaar online from uidai.gov.in using OTP once generated (usually 15-30 days).
+OFFICIAL PORTAL: https://uidai.gov.in / https://myaadhaar.uidai.gov.in
+HELPLINE: Toll-Free 1947 | Email: help@uidai.gov.in
+FEES: Free for initial enrollment. Rs. 50 for demographic updates; Rs. 100 for biometric updates.
+SOURCE / SOURCE TYPE: Unique Identification Authority of India (UIDAI) / Ministry of Electronics & IT

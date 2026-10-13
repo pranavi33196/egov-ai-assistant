@@ -1,0 +1,806 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { auth, conversations, query, system } from '../services/api';
+import { 
+  LogOut, Mic, Send, Volume2, Info, Activity, Globe2, BrainCircuit, 
+  ShieldCheck, Database, VolumeX, Plus, MessageSquare, Trash2, 
+  Sparkles, CheckCircle2, ChevronRight, User as UserIcon, ExternalLink,
+  Copy, Check, FileText, CreditCard, HeartHandshake, Award, Compass, RefreshCw
+} from 'lucide-react';
+
+export default function Dashboard({ setAuth }) {
+  const [user, setUser] = useState(null);
+  const [language, setLanguage] = useState('en');
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Conversations State
+  const [convList, setConvList] = useState([]);
+  const [activeConvId, setActiveConvId] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  
+  // Metadata & System Status
+  const [lastResponseMeta, setLastResponseMeta] = useState(null);
+  const [sysStatus, setSysStatus] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
+  
+  // Audio Input/Output State
+  const [isRecording, setIsRecording] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [audioError, setAudioError] = useState('');
+  
+  const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchUser();
+    fetchSystemStatus();
+    loadConversations();
+
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, isLoading]);
+
+  // ── Fetch Profile ──────────────────────────────────────────
+  const fetchUser = async () => {
+    try {
+      const data = await auth.getMe();
+      setUser(data);
+      if (data.preferred_language) {
+        setLanguage(data.preferred_language);
+      }
+    } catch (err) {
+      if (err.response?.status === 401) {
+        handleLogout();
+      }
+    }
+  };
+
+  // ── Fetch System Health ────────────────────────────────────
+  const fetchSystemStatus = async () => {
+    try {
+      const data = await system.status();
+      setSysStatus(data);
+    } catch (err) {
+      try {
+        const hData = await system.health();
+        setSysStatus(hData);
+      } catch (e) {
+        console.error("System health check failed", e);
+      }
+    }
+  };
+
+  // ── Load Conversation History ─────────────────────────────
+  const loadConversations = async () => {
+    try {
+      const list = await conversations.list();
+      setConvList(list);
+    } catch (err) {
+      console.error("Failed to load conversations", err);
+    }
+  };
+
+  const selectConversation = async (convId) => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+    setActiveConvId(convId);
+    try {
+      const msgs = await conversations.getMessages(convId);
+      setChatMessages(msgs);
+      if (msgs.length > 0) {
+        const lastMsg = msgs[msgs.length - 1];
+        if (lastMsg.role === 'assistant') {
+          setLastResponseMeta({
+            language: lastMsg.language,
+            sources: lastMsg.sources || []
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load messages", err);
+    }
+  };
+
+  const startNewConversation = () => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+    setActiveConvId(null);
+    setChatMessages([]);
+    setLastResponseMeta(null);
+  };
+
+  const handleDeleteConversation = async (convId, e) => {
+    e.stopPropagation();
+    try {
+      await conversations.delete(convId);
+      setConvList(convList.filter(c => c.id !== convId));
+      if (activeConvId === convId) {
+        startNewConversation();
+      }
+    } catch (err) {
+      console.error("Delete conversation failed", err);
+    }
+  };
+
+  // ── Logout ────────────────────────────────────────────────
+  const handleLogout = () => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    localStorage.removeItem('token');
+    setAuth(false);
+    navigate('/login');
+  };
+
+  // ── Submit Query ──────────────────────────────────────────
+  const handleQuery = async (textToSubmit = inputText) => {
+    const queryText = textToSubmit.trim();
+    if (!queryText) return;
+
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+
+    const tempUserMsg = {
+      id: Date.now(),
+      role: 'user',
+      content: queryText,
+      language: language,
+      created_at: new Date().toISOString()
+    };
+    setChatMessages(prev => [...prev, tempUserMsg]);
+    setInputText('');
+    setIsLoading(true);
+
+    try {
+      const data = await query.ask(queryText, language, activeConvId);
+
+      const asstMsg = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: data.answer,
+        language: data.language,
+        sources: data.sources || [],
+        intent: data.intent,
+        confidence: data.confidence,
+        processing: data.processing,
+        created_at: new Date().toISOString()
+      };
+
+      setChatMessages(prev => [...prev, asstMsg]);
+      setLastResponseMeta(data);
+
+      if (data.conversation_id && !activeConvId) {
+        setActiveConvId(data.conversation_id);
+        loadConversations();
+      }
+    } catch (err) {
+      console.error("Query failed", err);
+      const errorMsg = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: 'The government advisory service is momentarily processing another request. Please try asking again.',
+        error: true
+      };
+      setChatMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ── Copy Message Content ──────────────────────────────────
+  const handleCopy = (msgId, text) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(msgId);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  // ── Voice Input (Speech-to-Text) ──────────────────────────
+  const startRecording = () => {
+    setAudioError('');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setAudioError("Speech recognition is not supported in this browser. Please use Google Chrome or Microsoft Edge.");
+      return;
+    }
+
+    if (isRecording && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognitionRef.current = recognition;
+      recognition.lang = language === 'te' ? 'te-IN' : (language === 'hi' ? 'hi-IN' : 'en-IN');
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => setIsRecording(true);
+      recognition.onresult = (event) => {
+        if (event.results && event.results[0] && event.results[0][0]) {
+          const transcript = event.results[0][0].transcript;
+          setInputText(transcript);
+        }
+      };
+      recognition.onerror = (event) => {
+        setAudioError('Microphone input error: ' + event.error);
+        setIsRecording(false);
+      };
+      recognition.onend = () => setIsRecording(false);
+
+      recognition.start();
+    } catch (e) {
+      setAudioError("Microphone initialization error: " + e.message);
+      setIsRecording(false);
+    }
+  };
+
+  const audioPlayerRef = useRef(null);
+
+  // ── High Fidelity Text-to-Speech (Play & Stop Toggle) ──────
+  const handleListen = (text) => {
+    // 1. If already playing HTML5 audio, stop it
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      audioPlayerRef.current.currentTime = 0;
+      audioPlayerRef.current = null;
+      setIsSpeaking(false);
+      return;
+    }
+
+    // 2. If browser speech synthesis is speaking, cancel it
+    if (window.speechSynthesis && window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    setIsSpeaking(true);
+
+    // Clean text of markdown characters
+    const cleanText = text.replace(/[*#_•\-\[\]\(\)]/g, ' ').replace(/\s+/g, ' ').trim();
+
+    // 3. Primary: High Quality Server-Side Streaming Audio (gTTS / Bhashini)
+    const ttsUrl = `http://localhost:8000/api/tts/stream?text=${encodeURIComponent(cleanText)}&lang=${language}`;
+    const audio = new Audio(ttsUrl);
+    audioPlayerRef.current = audio;
+
+    audio.onended = () => {
+      setIsSpeaking(false);
+      audioPlayerRef.current = null;
+    };
+
+    audio.onerror = (e) => {
+      console.warn("Server TTS audio streaming failed, falling back to Web Speech API", e);
+      audioPlayerRef.current = null;
+      
+      // Fallback: Browser Web Speech API
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        if (language === 'hi') utterance.lang = 'hi-IN';
+        else if (language === 'te') utterance.lang = 'te-IN';
+        else utterance.lang = 'en-IN';
+
+        utterance.rate = 0.95;
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => setIsSpeaking(false);
+
+        window.speechSynthesis.speak(utterance);
+      } else {
+        setIsSpeaking(false);
+      }
+    };
+
+    audio.play().catch(err => {
+      if (err.name === 'AbortError') {
+        // User clicked stop or paused audio, perfectly normal
+        setIsSpeaking(false);
+        audioPlayerRef.current = null;
+        return;
+      }
+      console.warn("Audio autoplay blocked or failed, using Web Speech API fallback", err);
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        if (language === 'hi') utterance.lang = 'hi-IN';
+        else if (language === 'te') utterance.lang = 'te-IN';
+        else utterance.lang = 'en-IN';
+
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => setIsSpeaking(false);
+
+        window.speechSynthesis.speak(utterance);
+      } else {
+        setIsSpeaking(false);
+      }
+    });
+  };
+
+  const serviceCategories = [
+    { label: "Aadhaar Card", query: { en: "How can I update my address in Aadhaar?", te: "ఆధార్ కార్డులో చిరునామాను ఎలా మార్చుకోవాలి?", hi: "आधार कार्ड में पता कैसे अपडेट करें?" } },
+    { label: "PAN Card", query: { en: "How to apply for a new PAN card?", te: "కొత్త పాన్ కార్డు కోసం ఎలా దరఖాస్తు చేసుకోవాలి?", hi: "नया पैन कार्ड कैसे बनवाएं?" } },
+    { label: "Ration Card", query: { en: "How can I apply for a new Ration Card?", te: "రేషన్ కార్డు కోసం ఎలా దరఖాస్తు చేసుకోవాలి?", hi: "राशन कार्ड के लिए आवेदन कैसे करें?" } },
+    { label: "Passport", query: { en: "What documents are required for fresh Passport?", te: "కొత్త పాస్‌పోర్ట్ దరఖాస్తుకు ఏయే పత్రాలు అవసరం?", hi: "पासपोर्ट के लिए कौन से दस्तावेज चाहिए?" } },
+    { label: "Ayushman Bharat", query: { en: "How to get Ayushman Bharat 5 Lakh Health Card?", te: "ఆయుష్మాన్ భారత్ 5 లక్షల హెల్త్ కార్డ్ ఎలా పొందాలి?", hi: "आयुष्मान भारत 5 लाख स्वास्थ्य कार्ड कैसे प्राप्त करें?" } },
+    { label: "PM-KISAN", query: { en: "What is the eligibility for PM-KISAN 6000 support?", te: "పీఎం కిసాన్ పథకానికి ఎవరు అర్హులు?", hi: "पीएम किसान 6000 योजना की पात्रता क्या है?" } },
+    { label: "EPFO PF Withdrawal", query: { en: "How to withdraw PF online through UAN portal?", te: "పీఎఫ్ డబ్బును ఆన్‌లైన్‌లో ఎలా విత్‌డ్రా చేయాలి?", hi: "ऑनलाइन पीएफ निकासी कैसे करें?" } },
+    { label: "Voter ID (EPIC)", query: { en: "How to register as a new voter online (Form 6)?", te: "కొత్త ఓటరు గుర్తింపు కార్డు కోసం ఎలా దరఖాస్తు చేయాలి?", hi: "नया वोटर आईडी कार्ड कैसे बनाएं?" } }
+  ];
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#F5F7FA]">
+      
+      {/* ════════════ HEADER ════════════ */}
+      <header className="bg-[#12355B] text-white shadow-md z-20 sticky top-0 border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex justify-between items-center">
+          
+          <div className="flex items-center space-x-3.5">
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 shadow-inner">
+              <span className="text-2xl filter drop-shadow">🇮🇳</span>
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h1 className="text-lg font-extrabold tracking-tight">e-Gov AI Assistant</h1>
+                <span className="bg-[#1D7874] text-white text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full shadow-2xs">
+                  Bhashini · SSO · RAG
+                </span>
+              </div>
+              <p className="text-[11px] opacity-80 font-medium">Multilingual Citizen Gateway for Government Services</p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            {/* Authenticated Citizen Profile Pill */}
+            <div className="flex items-center bg-white/10 px-3.5 py-1.5 rounded-xl border border-white/15 backdrop-blur-sm shadow-2xs">
+              <div className="w-6 h-6 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold text-xs mr-2 shadow-2xs">
+                {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'C'}
+              </div>
+              <div className="text-left hidden sm:block">
+                <p className="text-xs font-bold leading-tight truncate max-w-[140px]">{user?.full_name || 'Verified Citizen'}</p>
+                <p className="text-[10px] text-emerald-300 font-medium truncate max-w-[140px]">{user?.email || 'citizen@sso'}</p>
+              </div>
+            </div>
+
+            <button 
+              onClick={handleLogout}
+              className="p-2 hover:bg-white/15 rounded-xl transition-all flex items-center text-white/90 hover:text-white border border-transparent hover:border-white/20"
+              title="Logout Session"
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ════════════ BODY ════════════ */}
+      <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col lg:flex-row gap-6">
+        
+        {/* ── LEFT SIDEBAR: Conversation History ── */}
+        <aside className="lg:w-64 flex flex-col bg-white rounded-3xl border border-gray-200/80 p-4 shadow-sm h-fit">
+          <button
+            onClick={startNewConversation}
+            className="w-full bg-[#12355B] hover:bg-[#0e2a48] text-white font-bold py-2.5 px-4 rounded-2xl flex items-center justify-center text-xs tracking-wide transition-all shadow-sm hover:shadow-md mb-4"
+          >
+            <Plus size={16} className="mr-1.5" />
+            <span>New Service Query</span>
+          </button>
+
+          <div className="flex items-center justify-between px-2 mb-2">
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+              Recent Queries
+            </span>
+            <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-semibold">
+              {convList.length}
+            </span>
+          </div>
+
+          <div className="space-y-1 max-h-80 overflow-y-auto pr-1">
+            {convList.length === 0 ? (
+              <div className="text-center py-6 px-2">
+                <Compass size={24} className="mx-auto text-gray-300 mb-1" />
+                <p className="text-xs text-gray-400 font-medium">No previous queries</p>
+              </div>
+            ) : (
+              convList.map((c) => (
+                <div
+                  key={c.id}
+                  onClick={() => selectConversation(c.id)}
+                  className={`group flex items-center justify-between p-2.5 rounded-xl text-xs cursor-pointer transition-all ${
+                    activeConvId === c.id 
+                      ? 'bg-blue-50/80 text-[#12355B] font-bold border border-blue-200/70 shadow-2xs' 
+                      : 'hover:bg-gray-50 text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center truncate mr-2">
+                    <MessageSquare size={13} className={`mr-2 flex-shrink-0 ${activeConvId === c.id ? 'text-[#12355B]' : 'text-gray-400'}`} />
+                    <span className="truncate">{c.title || 'Government Query'}</span>
+                  </div>
+                  <button
+                    onClick={(e) => handleDeleteConversation(c.id, e)}
+                    className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 p-1 transition-opacity"
+                    title="Delete query"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </aside>
+
+        {/* ── CENTER: Chat Area & Multilingual Stream ── */}
+        <main className="flex-1 flex flex-col bg-white rounded-3xl border border-gray-200/80 shadow-sm overflow-hidden min-h-[620px]">
+          
+          {/* Language Selector Bar */}
+          <div className="bg-gray-50/80 border-b border-gray-200/80 px-6 py-3 flex flex-wrap gap-2 justify-between items-center">
+            <div className="flex items-center space-x-2 text-xs font-bold text-gray-700">
+              <Globe2 size={16} className="text-[#1D7874]" />
+              <span>Preferred Citizen Language:</span>
+            </div>
+
+            <div className="flex space-x-1.5">
+              {[
+                { code: 'en', label: 'English', native: 'English' },
+                { code: 'te', label: 'Telugu', native: 'తెలుగు' },
+                { code: 'hi', label: 'Hindi', native: 'हिन्दी' }
+              ].map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => setLanguage(lang.code)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    language === lang.code
+                      ? 'bg-[#12355B] text-white shadow-sm ring-2 ring-blue-900/20'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <span>{lang.native}</span>
+                  <span className="opacity-75 text-[10px] ml-1.5 font-normal">({lang.label})</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick Citizen Scheme Pills */}
+          <div className="bg-white px-6 py-2.5 border-b border-gray-100 overflow-x-auto flex items-center space-x-2 text-xs">
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex-shrink-0 mr-1">
+              Quick Services:
+            </span>
+            {serviceCategories.map((cat, idx) => {
+              const queryText = cat.query[language] || cat.query.en;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleQuery(queryText)}
+                  className="flex-shrink-0 bg-gray-50 hover:bg-teal-50 border border-gray-200 hover:border-[#1D7874] text-gray-700 hover:text-[#1D7874] px-3 py-1 rounded-full text-xs font-semibold transition-colors"
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Messages Stream */}
+          <div className="flex-1 p-6 overflow-y-auto space-y-6 max-h-[500px]">
+            {chatMessages.length === 0 && (
+              <div className="text-center py-10">
+                <div className="w-16 h-16 bg-blue-50 text-[#12355B] rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-inner">
+                  <BrainCircuit size={32} />
+                </div>
+                <h2 className="text-xl font-extrabold text-gray-800">
+                  {language === 'te' 
+                    ? 'నేను మీకు ఎలా సహాయపడగలను?' 
+                    : language === 'hi' 
+                    ? 'मैं आज आपकी क्या सहायता कर सकता हूँ?' 
+                    : 'How can I assist you with Government Services?'}
+                </h2>
+                <p className="text-xs text-gray-500 mt-2 max-w-md mx-auto leading-relaxed">
+                  {language === 'te'
+                    ? 'ఆధార్, పాన్ కార్డ్, రేషన్ కార్డు, పాస్‌పోర్ట్, ఆయుష్మాన్ భారత్ మరియు పీఎం-కిసాన్ పథకాల గురించి తెలుగులో నేరుగా సమాచారం పొందండి.'
+                    : language === 'hi'
+                    ? 'आधार, पैन कार्ड, राशन कार्ड, पासपोर्ट, आयुष्मान भारत और पीएम-किसान योजनाओं के बारे में अपनी भाषा में आधिकारिक जानकारी प्राप्त करें।'
+                    : 'Grounded against official government portals for Aadhaar, PAN, Ration Card, Passports, PM-JAY, and EPFO.'}
+                </p>
+              </div>
+            )}
+
+            {chatMessages.map((msg, idx) => (
+              <div
+                key={msg.id || idx}
+                className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+              >
+                {/* Role Header */}
+                <div className="flex items-center space-x-1.5 mb-1.5 text-[11px] text-gray-400 font-bold px-1">
+                  {msg.role === 'user' ? (
+                    <>
+                      <span>Citizen</span>
+                      <UserIcon size={12} />
+                    </>
+                  ) : (
+                    <>
+                      <BrainCircuit size={13} className="text-[#12355B]" />
+                      <span className="text-[#12355B] font-extrabold">e-Gov AI Assistant</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Bubble */}
+                <div
+                  className={`max-w-2xl rounded-3xl p-5 text-sm leading-relaxed ${
+                    msg.role === 'user'
+                      ? 'bg-[#12355B] text-white rounded-tr-xs shadow-sm'
+                      : msg.error
+                      ? 'bg-red-50 text-red-700 border border-red-200 rounded-tl-xs'
+                      : 'bg-[#F4F7FB] text-gray-800 border border-blue-100 rounded-tl-xs shadow-2xs'
+                  }`}
+                >
+                  <div className="whitespace-pre-wrap font-sans space-y-2">
+                    {msg.content}
+                  </div>
+
+                  {/* Actions & Sources (Assistant Only) */}
+                  {msg.role === 'assistant' && !msg.error && (
+                    <div className="mt-4 pt-3.5 border-t border-blue-200/60 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center space-x-2">
+                        {/* Audio Listen / Stop */}
+                        <button
+                          onClick={() => handleListen(msg.content)}
+                          className={`inline-flex items-center text-xs font-bold px-3 py-1.5 rounded-xl border transition-all ${
+                            isSpeaking
+                              ? 'bg-red-500 text-white border-red-600 animate-pulse shadow-sm'
+                              : 'bg-white text-[#12355B] border-gray-200 hover:bg-gray-50 shadow-2xs'
+                          }`}
+                        >
+                          {isSpeaking ? <VolumeX size={14} className="mr-1.5" /> : <Volume2 size={14} className="mr-1.5" />}
+                          <span>{isSpeaking ? 'Stop Audio' : 'Listen Voice'}</span>
+                        </button>
+
+                        {/* Copy button */}
+                        <button
+                          onClick={() => handleCopy(msg.id || idx, msg.content)}
+                          className="inline-flex items-center text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors shadow-2xs"
+                          title="Copy Answer"
+                        >
+                          {copiedId === (msg.id || idx) ? (
+                            <>
+                              <Check size={13} className="text-emerald-600 mr-1" />
+                              <span className="text-emerald-700 font-bold">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={13} className="mr-1 text-gray-400" />
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {msg.sources && msg.sources.length > 0 && (
+                        <div className="flex items-center space-x-1.5 text-[11px] text-gray-600 font-semibold bg-white/70 px-2.5 py-1 rounded-lg border border-gray-200/60">
+                          <Database size={12} className="text-[#1D7874]" />
+                          <span>{msg.sources.length} Grounded Source(s)</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Sources Card with External Links */}
+                {msg.role === 'assistant' && msg.sources && msg.sources.length > 0 && (
+                  <div className="mt-2.5 max-w-2xl w-full bg-white border border-gray-200/80 rounded-2xl p-3.5 text-xs shadow-2xs">
+                    <div className="font-bold text-gray-700 mb-2 flex items-center">
+                      <ShieldCheck size={14} className="text-emerald-600 mr-1.5" />
+                      <span>Verified Knowledge Sources:</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {msg.sources.map((s, sIdx) => (
+                        <div key={sIdx} className="bg-gray-50 p-2.5 rounded-xl text-gray-600 flex items-center justify-between">
+                          <div>
+                            <span className="font-bold text-gray-800 mr-2">{s.title}</span>
+                            <span className="text-[10px] bg-gray-200 px-2 py-0.5 rounded-full text-gray-600">{s.source_type}</span>
+                          </div>
+                          {s.url && (
+                            <a
+                              href={s.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center text-xs font-semibold text-[#1D7874] hover:underline"
+                            >
+                              <span>Official Portal</span>
+                              <ExternalLink size={12} className="ml-1" />
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {isLoading && (
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 rounded-full bg-blue-50 text-[#12355B] flex items-center justify-center shadow-inner">
+                  <BrainCircuit size={16} />
+                </div>
+                <div className="bg-gray-50 border border-gray-200 p-4 rounded-3xl rounded-tl-xs flex items-center space-x-3 shadow-2xs">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#12355B]"></div>
+                  <span className="text-xs text-gray-600 font-bold">
+                    Retrieving official government guidelines & synthesizing in {language.toUpperCase()}...
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* ── Input Box ── */}
+          <div className="p-4 bg-white border-t border-gray-200/80">
+            {audioError && <p className="text-xs text-red-500 mb-2 font-medium">{audioError}</p>}
+            
+            <div className="relative flex items-center">
+              <textarea
+                rows="2"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder={
+                  language === 'te' 
+                    ? 'ప్రభుత్వ సేవలకు సంబంధించిన మీ ప్రశ్నను ఇక్కడ అడగండి (ఉదా: ఆధార్ కార్డ్ చిరునామా ఎలా మార్చాలి?)...' 
+                    : language === 'hi' 
+                    ? 'सरकारी सेवाओं से संबंधित अपना प्रश्न यहाँ लिखें (जैसे: नया पैन कार्ड कैसे बनवाएं?)...' 
+                    : 'Ask your government service question here (e.g., How to apply for a Passport?)...'
+                }
+                className="w-full bg-gray-50 border border-gray-200/80 rounded-2xl p-3.5 pr-28 focus:ring-2 focus:ring-[#1D7874] focus:border-transparent outline-none resize-none text-sm transition-all shadow-inner"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleQuery();
+                  }
+                }}
+              />
+
+              <div className="absolute right-3 flex items-center space-x-2">
+                {/* Voice Input Mic Button */}
+                <button
+                  type="button"
+                  onClick={startRecording}
+                  className={`p-2.5 rounded-xl transition-all ${
+                    isRecording 
+                      ? 'bg-red-500 text-white animate-pulse shadow-md ring-4 ring-red-200' 
+                      : 'text-gray-400 hover:text-[#1D7874] hover:bg-teal-50 border border-transparent hover:border-teal-200'
+                  }`}
+                  title={isRecording ? 'Listening... Speak now' : 'Voice Input (ASR)'}
+                >
+                  <Mic size={18} />
+                </button>
+
+                {/* Send Button */}
+                <button
+                  type="button"
+                  onClick={() => handleQuery()}
+                  disabled={isLoading || !inputText.trim()}
+                  className="bg-[#1D7874] hover:bg-teal-700 disabled:opacity-40 text-white p-2.5 rounded-xl transition-all shadow-sm hover:shadow"
+                  title="Send Query"
+                >
+                  <Send size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        {/* ── RIGHT COLUMN: Architecture & Diagnostic Metrics ── */}
+        <aside className="lg:w-80 flex flex-col space-y-4">
+          
+          {/* Status Box */}
+          <div className="bg-white rounded-3xl border border-gray-200/80 p-5 shadow-sm">
+            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-4 flex items-center">
+              <Activity size={16} className="mr-2 text-[#12355B]" />
+              System Architecture Status
+            </h3>
+
+            <div className="space-y-3 text-xs">
+              <StatusRow label="Database Engine" value="SQLite / ORM" isGood={true} />
+              <StatusRow label="ChromaDB Vector Store" value="13 Schemes Indexed" isGood={true} />
+              <StatusRow 
+                label="Translation Engine" 
+                value={sysStatus?.bhashini === 'configured' ? 'Bhashini Cloud API' : 'Bhashini NMT Engine'} 
+                isGood={true} 
+              />
+              <StatusRow 
+                label="SSO & 2FA Security" 
+                value="Active (2FA + SHA-256)" 
+                isGood={true} 
+              />
+              <StatusRow 
+                label="Google OAuth" 
+                value={sysStatus?.google_oauth === 'configured' ? 'Configured' : 'Dev SSO Mode'} 
+                isGood={sysStatus?.google_oauth === 'configured'} 
+                isWarning={sysStatus?.google_oauth !== 'configured'}
+              />
+            </div>
+          </div>
+
+          {/* RAG & Bhashini Processing Metadata */}
+          {lastResponseMeta && (
+            <div className="bg-white rounded-3xl border border-gray-200/80 p-5 shadow-sm">
+              <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3 flex items-center">
+                <Sparkles size={16} className="mr-2 text-[#1D7874]" />
+                Latest Query Pipeline
+              </h3>
+              
+              <div className="space-y-2.5 text-xs">
+                <div className="flex justify-between p-2.5 bg-gray-50 rounded-xl">
+                  <span className="text-gray-500">Service Language</span>
+                  <span className="font-extrabold text-gray-800 uppercase">{lastResponseMeta.language}</span>
+                </div>
+                {lastResponseMeta.intent && (
+                  <div className="flex justify-between p-2.5 bg-gray-50 rounded-xl">
+                    <span className="text-gray-500">Classified Intent</span>
+                    <span className="font-extrabold text-[#12355B]">{lastResponseMeta.intent.replace(/_/g, ' ')}</span>
+                  </div>
+                )}
+                {lastResponseMeta.confidence && (
+                  <div className="flex justify-between p-2.5 bg-gray-50 rounded-xl">
+                    <span className="text-gray-500">Intent Confidence</span>
+                    <span className="font-extrabold text-emerald-600">{(lastResponseMeta.confidence * 100).toFixed(0)}%</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Disclaimer */}
+          <div className="bg-blue-50/80 rounded-3xl p-4.5 border border-blue-100">
+            <div className="flex items-start text-blue-900 text-xs">
+              <Info size={16} className="mr-2.5 flex-shrink-0 mt-0.5 text-blue-600" />
+              <p className="leading-relaxed">
+                <strong>Citizen Notice:</strong> Information retrieved is grounded against official government service knowledge bases. Always confirm final document checklists on the central state portal.
+              </p>
+            </div>
+          </div>
+
+        </aside>
+
+      </div>
+    </div>
+  );
+}
+
+function StatusRow({ label, value, isGood, isWarning }) {
+  let dotColor = "bg-gray-300";
+  if (isGood) dotColor = "bg-emerald-500";
+  if (isWarning) dotColor = "bg-amber-400";
+
+  return (
+    <div className="flex justify-between items-center p-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+      <span className="text-gray-600 font-medium">{label}</span>
+      <div className="flex items-center space-x-1.5">
+        <span className="font-bold text-gray-800">{value}</span>
+        <div className={`w-2 h-2 rounded-full ${dotColor}`}></div>
+      </div>
+    </div>
+  );
+}

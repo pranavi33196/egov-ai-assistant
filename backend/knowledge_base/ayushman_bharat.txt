@@ -1,0 +1,13 @@
+SERVICE: Ayushman Bharat - PMJAY (Pradhan Mantri Jan Arogya Yojana)
+DESCRIPTION: World's largest government-funded healthcare scheme providing health insurance coverage of up to Rs. 5,00,000 per family per year for secondary and tertiary care hospitalization across empaneled public and private hospitals.
+GENERAL ELIGIBILITY: Families identified under the Socio-Economic Caste Census (SECC 2011) database, including BPL ration card holders, rural occupational categories, and urban vulnerable workers.
+REQUIRED DOCUMENTS: Aadhaar Card, Ration Card (or Family ID / Samagra ID), PM-JAY Letter / SECC Confirmation, Active Mobile Number.
+APPLICATION PROCESS:
+1. Check eligibility on the official portal (beneficiary.nha.gov.in) using your mobile number or Aadhaar.
+2. If eligible, generate an Ayushman Card (Golden Card) online or visit any empaneled hospital / CSC Common Service Center / Ayushman Mitra kiosk.
+3. Complete e-KYC using Aadhaar OTP or Face Authentication.
+4. Download the PVC or digital Ayushman Card and present it at any empaneled hospital for 100% cashless treatment.
+OFFICIAL PORTAL: https://beneficiary.nha.gov.in / https://pmjay.gov.in
+HELPLINE: Toll-Free 14555 / 1800-111-565
+FEES: 100% Free medical coverage and card generation.
+SOURCE / SOURCE TYPE: National Health Authority (NHA) / Ministry of Health & Family Welfare

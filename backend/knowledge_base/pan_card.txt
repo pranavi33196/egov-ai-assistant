@@ -1,0 +1,13 @@
+SERVICE: Permanent Account Number (PAN Card)
+DESCRIPTION: PAN is a 10-character alphanumeric identifier issued by the Income Tax Department to individuals and entities for taxation, banking, financial investments, and legal transactions.
+GENERAL ELIGIBILITY: Any Indian citizen, NRI, minor, business firm, trust, or company requiring tax filing or financial identification.
+REQUIRED DOCUMENTS: Proof of Identity (Aadhaar, Voter ID, Passport), Proof of Address (Aadhaar, Utility bills, Bank statement), Proof of Date of Birth (Birth Certificate, Matriculation Certificate, Aadhaar).
+APPLICATION PROCESS:
+1. Apply online via Protean (NSDL e-Gov) or UTIITSL official portals using Form 49A.
+2. Select Paperless e-KYC mode (instant verification via Aadhaar OTP) or physical document submission.
+3. Fill personal details, upload photo and signature (if not using Aadhaar e-KYC).
+4. Pay processing fee online. Instant e-PAN is delivered to your email within hours for Aadhaar-linked paperless applications. Physical card is dispatched to registered address within 10-15 business days.
+OFFICIAL PORTAL: https://www.onlineservices.nsdl.com / https://www.pan.utiitsl.com / https://eportal.incometax.gov.in
+HELPLINE: Toll-Free 1800-180-1961 | Protean: 020-27218080
+FEES: Rs. 107 (Physical card within India) | Free instant e-PAN via Income Tax e-filing portal.
+SOURCE / SOURCE TYPE: Income Tax Department / Central Board of Direct Taxes (CBDT)
